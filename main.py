@@ -8,8 +8,8 @@ mixer.init()
 # mixer.music.set_volume(0.1)
 # mixer.music.play(loops=0)
 
-# hit_sound = mixer.Sound('CHANGETHIS.wav')
-# hit_sound.set_volume(0.5)
+# CHANGE_sound = mixer.Sound('CHANGETHIS.wav')
+# CHANGE_sound.set_volume(0.5)
 
 FONT = 'Fonts/Ubuntu-Bold.ttf'
 
@@ -20,11 +20,10 @@ WIDTH, HEIGHT = scr_info.current_w,  scr_info.current_h
 
 
 window = display.set_mode((WIDTH,HEIGHT), flags=FULLSCREEN)
-display.set_caption("Boring Rhythm Game")
+display.set_caption("CHANGETHIS")
 clock = time.Clock()
 
-# note_img = image.load("CHANGETHIS.png")
-# key_img = image.load("CHANGETHIS.png")
+# CHANGETHIS_img = image.load("CHANGETHIS.png")
 
 all_sprites = sprite.Group()
 all_labels = sprite.Group()
