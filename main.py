@@ -1,5 +1,4 @@
 from pygame import *
-from keys import keycodes
 from time import sleep
 import math as mathh
 import random
@@ -7,9 +6,6 @@ import random
 init()
 font.init()
 mixer.init()
-# mixer.music.load('CHANGETHIS.ogg')
-# mixer.music.set_volume(0.1)
-# mixer.music.play(loops=0)
 
 # CHANGE_sound = mixer.Sound('CHANGETHIS.wav')
 # CHANGE_sound.set_volume(0.5)
@@ -38,6 +34,7 @@ meh_img = image.load("Sprite/Ratings/meh.png")
 miss_img = image.load("Sprite/Ratings/miss.png")
 
 notes = sprite.Group()
+keys = sprite.Group()
 all_sprites = sprite.Group()
 all_labels = sprite.Group()
 
@@ -52,7 +49,7 @@ class Label(sprite.Sprite):
         self.rect.y  = y
         all_labels.add(self)
     
-    def set_text(self, new_text, color=(225, 228, 232)):
+    def set_text(self, new_text, color=(255, 255, 255)):
         self.image = self.font.render(new_text, True, color) 
 
 class BaseSprite(sprite.Sprite):
@@ -62,9 +59,6 @@ class BaseSprite(sprite.Sprite):
         self.rect = Rect(x,y,width, height)
         self.mask = mask.from_surface(self.image)
         all_sprites.add(self)
-                
-    # def draw(self, window):
-    #     if self.rect.x > 0 - self.rect.width and self.rect.x < WIDTH: window.blit(self.image, self.rect)
 
 class Note(sprite.Sprite):
     def __init__(self, image, x, y, width, height, actualY, keyAttached):
@@ -76,40 +70,43 @@ class Note(sprite.Sprite):
         self.keyAttached = keyAttached
         notes.add(self)
 
-        def draw(self, window):
-            if self.rect.x > 0 - self.rect.width and self.rect.x < WIDTH: window.blit(self.image, self.rect)
-
     def update(self):
-        if self.rect.y > self.keyAttached.rect.y +90 +(scrollSpeed/5 + BPM/64)*scrollSpeed*2:
+        if self.rect.y > self.keyAttached.rect.y +90 +(scrollSpeed/5 + BPM/64)*scrollSpeed*2 and self.alive:
             score[0] -= score[2]
+            ratings.append(0)
+            score_txt.set_text(f"Score: {mathh.trunc(score[0])}")
+            self.kill()
             # Pop up "Missed!" sprite
+
         self.rect.x = self.keyAttached.rect.x
-        self.rect.y = ((self.actualY * 4000 / BPM * 1.02 / stepsInBeat) + curstep - self.keyAttached.rect.y) * scrollSpeed + songOffset * 100 + globalSongOffset * 100 + scrollSpeed * 800 + self.keyAttached.rect.y
+        self.rect.y = ((self.actualY * 4000 / BPM * 0.912 / stepsInBeat) + curstep - self.keyAttached.rect.y) * scrollSpeed + songOffset * 100 + globalSongOffset * 100 + scrollSpeed * 800 + self.keyAttached.rect.y # I hate this sm
 
 class Key(sprite.Sprite):
-    def __init__(self, image, x, y, width, height, keynum):
+    def __init__(self, image, x, y, width, height, keycode):
         super().__init__()
         self.image = transform.scale(image, (width, height))
         self.rect = Rect(x,y,width, height)
         self.mask = mask.from_surface(self.image)
-        all_sprites.add(self)
+        self.activeFor = 0
+        self.size = (width, height)
+        self.keycode = keycode
+        keys.add(self)
 
     def update(self):
         keys = key.get_pressed()
 
-        if keys[K_d]:
-            
-                
-    # def draw(self, window):
-    #     if self.rect.x > 0 - self.rect.width and self.rect.x < WIDTH: window.blit(self.image, self.rect)
-
-def cap(n, minn, maxn):
-    return max(min(maxn, n), minn)
+        if keys[key.key_code(self.keycode)]:
+            self.image = transform.scale(key_active_img, self.size)
+            self.activeFor += 1
+        else:
+            self.image = transform.scale(key_inactive_img, self.size)
+            self.activeFor = 0
 
 def loadChart(chartName):
     chartSteps = open(f"Maps\{chartName}\chart.txt")
     chartInfo = open(f"Maps\{chartName}\chart_info.txt").readlines()
-    
+
+    global currentSong
     global song_name
     global song_author
     global song_charter
@@ -118,49 +115,52 @@ def loadChart(chartName):
     global songOffset
     global scrollSpeed
     global stepsInBeat
+    global validChart
 
-    global chartLoaded
+    global startAfter
+    global chartLoaded 
 
-    song_name = chartInfo[0].replace("\n", "")
-    song_author = chartInfo[1].replace("\n", "")
-    song_charter = chartInfo[2].replace("\n", "")
+    song_name = chartInfo[0].split(":")[1].replace("\n", "")
+    song_author = chartInfo[1].split(":")[1].replace("\n", "")
+    song_charter = chartInfo[2].split(":")[1].replace("\n", "")
 
-    BPM = int(chartInfo[3].replace("\n", ""))
-    songOffset = int(chartInfo[4].replace("\n", ""))
-    stepsInBeat = int(chartInfo[5].replace("\n", ""))
-    scrollSpeed = int(chartInfo[6].replace("\n", ""))
+    BPM = int(chartInfo[3].split(":")[1].replace("\n", ""))
+    songOffset = int(chartInfo[4].split(":")[1].replace("\n", ""))
+    stepsInBeat = int(chartInfo[5].split(":")[1].replace("\n", ""))
+    scrollSpeed = int(chartInfo[6].split(":")[1].replace("\n", ""))
+    startAfter = int(chartInfo[7].split(":")[1].replace("\n", ""))
 
+    currentSong = mixer.Sound(f"Maps/{chartName}/Song.ogg")
     chartLoaded = True
     localActualY = 0
 
-    for step in chartSteps:
-        newStep = step.replace("\n", "")
-        localActualY -= 1
-        i = 0
-        for key in newStep:
-            if key == "O":
-                score[1] += 1
-                score[2] = 1000000 / score[1]
-                match i:
-                    case 0: notes.add(Note(note_img, k1.rect.x, ((localActualY * 4000 / BPM * 1.02 / stepsInBeat) + curstep - k1.rect.y + songOffset + 1600) , 128, 128, localActualY, k1))
-                    case 1: notes.add(Note(note_img, k2.rect.x, ((localActualY * 4000 / BPM * 1.02 / stepsInBeat) + curstep - k2.rect.y + songOffset + 1600) , 128, 128, localActualY, k2))
-                    case 2: notes.add(Note(note_img, k3.rect.x, ((localActualY * 4000 / BPM * 1.02 / stepsInBeat) + curstep - k3.rect.y + songOffset + 1600) , 128, 128, localActualY, k3))
-                    case 3: notes.add(Note(note_img, k4.rect.x, ((localActualY * 4000 / BPM * 1.02 / stepsInBeat) + curstep - k4.rect.y + songOffset + 1600) , 128, 128, localActualY, k4))
-            i += 1
+    validChart = scrollSpeed > 0 and stepsInBeat > 0 and BPM > 0 and startAfter >= 0
 
-k1 = Key(key_inactive_img, WIDTH /2 -210 -64, HEIGHT - 200, 128, 128, 1)
-k2 = Key(key_inactive_img, WIDTH /2 -70 -64, HEIGHT - 200, 128, 128, 2)
-k3 = Key(key_inactive_img, WIDTH /2 +70 -64, HEIGHT - 200, 128, 128, 3)
-k4 = Key(key_inactive_img, WIDTH /2 +210 -64, HEIGHT - 200, 128, 128, 4)
+    if validChart:
+        for step in chartSteps:
+            newStep = step.replace("\n", "")
+            localActualY -= 1
+            i = 0
+            for key in newStep:
+                if key == "O":
+                    score[1] += 1
+                    score[2] = 1000000 / mathh.floor(score[1])
+                    match i:
+                        case 0: notes.add(Note(note_img, k1.rect.x, -500, 128, 128, localActualY, k1))
+                        case 1: notes.add(Note(note_img, k2.rect.x, -500, 128, 128, localActualY, k2))
+                        case 2: notes.add(Note(note_img, k3.rect.x, -500, 128, 128, localActualY, k3))
+                        case 3: notes.add(Note(note_img, k4.rect.x, -500, 128, 128, localActualY, k4))
+                i += 1
 
 rating_popup = BaseSprite(noimg, WIDTH /2 - 256, HEIGHT - 350, 512, 128)
 
 ghost_tapping = bool(open("settings.txt").readlines()[2].split(":")[1].replace(" ", "").replace("\n", ""))
 globalSongOffset = float(open("settings.txt").readlines()[3].split(":")[1].replace(" ", "").replace("\n", ""))
+controls = str(open("settings.txt").readlines()[4].split(":")[1].replace(" ", "").replace("\n", ""))
 
-inputs = [0, 0, 0, 0] #how much each key is held for
 score = [0, 0, 0] # current score, note count, how many points do you get for getting a "Perfect!"
-ratings = [0, 0, 0, 0, 0] # "Perfect!", "Great!", "Good!", "Meh...", "Miss."
+ratings = [] # 1 = "Perfect!", 0.9 = "Great!", 0.6 = "Good!", 0.3 = "Meh...", 0 = "Miss."
+accuracy = 100.00
 
 currentSong = None
 chartLoaded = False
@@ -176,13 +176,55 @@ curstep = 0
 songOffset = None
 stepsInBeat = None
 
-loadChart("fridaytheme")
+startAfter = None
+playSong = True
+validChart = None
+
+timer = 0
+rpp_timer = 0
+
+k1 = Key(key_inactive_img, WIDTH /2 -210 -64, HEIGHT - 200, 128, 128, controls[0])
+k2 = Key(key_inactive_img, WIDTH /2 -70 -64, HEIGHT - 200, 128, 128, controls[1])
+k3 = Key(key_inactive_img, WIDTH /2 +70 -64, HEIGHT - 200, 128, 128, controls[2])
+k4 = Key(key_inactive_img, WIDTH /2 +210 -64, HEIGHT - 200, 128, 128, controls[3])
+
 run = True
+loadChart("fridaytheme")
+
+if not validChart:
+    invalidChart_txt = Label("Invalid chart: make sure scroll speed, steps in beat, BPM and start song after are above 0.", 20, HEIGHT - 40, 20)
+    k1.kill()
+    k2.kill()
+    k3.kill()
+    k4.kill()
+else:
+    score_txt = Label(f"Score: 0", 20, 20, 50)
+    accuracy_txt = Label(f"Accuracy: N/A", 20, 70, 50)
+
 while run:
     window.fill((0, 0, 0))
-    curstep += 1
-    
-    notes.update() 
+    if validChart:
+        curstep += 1
+
+        timer += 1
+        if timer > startAfter and playSong:
+            currentSong.set_volume(0.2)
+            currentSong.play(loops=0)
+            playSong = False
+        
+        if len(ratings) > 0:
+            for i in ratings:
+                accuracy = mathh.trunc(((1 * ratings.count(1) + 0.9 * ratings.count(0.9) + 0.6 *  ratings.count(0.6) + 0.3 * ratings.count(0.3) + 0 * ratings.count(0)) / len(ratings)) * 10000) / 100
+            accuracy_txt.set_text(f"Accuracy: {accuracy}%")
+        else:
+            accuracy_txt.set_text(f"Accuracy: N/A")
+
+
+        notes.update() 
+        keys.update()
+
+        keys.draw(window)
+        notes.draw(window)
 
     for e in event.get():
         if e.type == QUIT:
@@ -190,9 +232,7 @@ while run:
         if e.type == KEYDOWN:
             if e.key == K_ESCAPE:
                 run = False
-
     all_sprites.draw(window)
-    notes.draw(window)
     all_labels.draw(window)
     
     display.update()

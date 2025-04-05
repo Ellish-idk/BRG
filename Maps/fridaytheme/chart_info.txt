@@ -1,7 +1,8 @@
-Roblox 3008 - Friday Theme
-uglyburger0
-BRG
-120
-0
-4
-25
+song name:Roblox 3008 - Friday Theme
+song author:uglyburger0
+charter:BRG
+BPM:94
+song offset:0
+steps in beat:2
+scroll speed:10
+start song after:92
