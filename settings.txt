@@ -1,5 +1,4 @@
 PLEASE DO NOT CHANGE THE ORDER OR THE AMOUNT OF LINES IN THIS FILE! IT MIGHT BREAK THE GAME
 
-controls (string): "dfjk"
 ghost tapping (True / False): True
 globall song offset: 0

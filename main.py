@@ -1,4 +1,5 @@
 from pygame import *
+from keys import keycodes
 from time import sleep
 import math as mathh
 import random
@@ -24,15 +25,17 @@ window = display.set_mode((WIDTH,HEIGHT), flags=FULLSCREEN)
 display.set_caption("Boring Rhythm Game (BRG)")
 clock = time.Clock()
 
-note_img = image.load("Sprite\square.png")
-key_active_img = image.load("Sprite\square_outline.png")
-key_inactive_img = image.load("Sprite\square_outline_inactive.png")
+noimg = image.load("Sprite/void.png")
 
-perfect_img = image.load("Sprite\Ratings\perfect.png")
-great_img = image.load("Sprite\Ratings\great.png")
-good_img = image.load("Sprite\Ratings\good.png")
-meh_img = image.load("Sprite\Ratings\meh.png")
-miss_img = image.load("Sprite\Ratings\miss.png")
+note_img = image.load("Sprite/square.png")
+key_active_img = image.load("Sprite/square_outline.png")
+key_inactive_img = image.load("Sprite/square_outline_inactive.png")
+
+perfect_img = image.load("Sprite/Ratings/perfect.png")
+great_img = image.load("Sprite/Ratings/great.png")
+good_img = image.load("Sprite/Ratings/good.png")
+meh_img = image.load("Sprite/Ratings/meh.png")
+miss_img = image.load("Sprite/Ratings/miss.png")
 
 notes = sprite.Group()
 all_sprites = sprite.Group()
@@ -71,8 +74,10 @@ class Note(sprite.Sprite):
         self.mask = mask.from_surface(self.image)
         self.actualY = actualY
         self.keyAttached = keyAttached
-        all_sprites.add(self)
         notes.add(self)
+
+        def draw(self, window):
+            if self.rect.x > 0 - self.rect.width and self.rect.x < WIDTH: window.blit(self.image, self.rect)
 
     def update(self):
         if self.rect.y > self.keyAttached.rect.y +90 +(scrollSpeed/5 + BPM/64)*scrollSpeed*2:
@@ -81,14 +86,19 @@ class Note(sprite.Sprite):
         self.rect.x = self.keyAttached.rect.x
         self.rect.y = ((self.actualY * 4000 / BPM * 1.02 / stepsInBeat) + curstep - self.keyAttached.rect.y) * scrollSpeed + songOffset * 100 + globalSongOffset * 100 + scrollSpeed * 800 + self.keyAttached.rect.y
 
-
 class Key(sprite.Sprite):
-    def __init__(self, image, x, y, width, height):
+    def __init__(self, image, x, y, width, height, keynum):
         super().__init__()
         self.image = transform.scale(image, (width, height))
         self.rect = Rect(x,y,width, height)
         self.mask = mask.from_surface(self.image)
         all_sprites.add(self)
+
+    def update(self):
+        keys = key.get_pressed()
+
+        if keys[K_d]:
+            
                 
     # def draw(self, window):
     #     if self.rect.x > 0 - self.rect.width and self.rect.x < WIDTH: window.blit(self.image, self.rect)
@@ -138,14 +148,15 @@ def loadChart(chartName):
                     case 3: notes.add(Note(note_img, k4.rect.x, ((localActualY * 4000 / BPM * 1.02 / stepsInBeat) + curstep - k4.rect.y + songOffset + 1600) , 128, 128, localActualY, k4))
             i += 1
 
-k1 = Key(key_inactive_img, WIDTH /2 -210 -64, HEIGHT - 200, 128, 128)
-k2 = Key(key_inactive_img, WIDTH /2 -70 -64, HEIGHT - 200, 128, 128)
-k3 = Key(key_inactive_img, WIDTH /2 +70 -64, HEIGHT - 200, 128, 128)
-k4 = Key(key_inactive_img, WIDTH /2 +210 -64, HEIGHT - 200, 128, 128)
+k1 = Key(key_inactive_img, WIDTH /2 -210 -64, HEIGHT - 200, 128, 128, 1)
+k2 = Key(key_inactive_img, WIDTH /2 -70 -64, HEIGHT - 200, 128, 128, 2)
+k3 = Key(key_inactive_img, WIDTH /2 +70 -64, HEIGHT - 200, 128, 128, 3)
+k4 = Key(key_inactive_img, WIDTH /2 +210 -64, HEIGHT - 200, 128, 128, 4)
 
-controls = open("settings.txt").readlines()[2].split(":")[1].replace(" ", "").replace("\n", "") # gets the value of the first setting in the settings file
-ghost_tapping = bool(open("settings.txt").readlines()[3].split(":")[1].replace(" ", "").replace("\n", ""))
-globalSongOffset = float(open("settings.txt").readlines()[4].split(":")[1].replace(" ", "").replace("\n", ""))
+rating_popup = BaseSprite(noimg, WIDTH /2 - 256, HEIGHT - 350, 512, 128)
+
+ghost_tapping = bool(open("settings.txt").readlines()[2].split(":")[1].replace(" ", "").replace("\n", ""))
+globalSongOffset = float(open("settings.txt").readlines()[3].split(":")[1].replace(" ", "").replace("\n", ""))
 
 inputs = [0, 0, 0, 0] #how much each key is held for
 score = [0, 0, 0] # current score, note count, how many points do you get for getting a "Perfect!"
@@ -181,6 +192,7 @@ while run:
                 run = False
 
     all_sprites.draw(window)
+    notes.draw(window)
     all_labels.draw(window)
     
     display.update()
