@@ -64,60 +64,22 @@ class Note(sprite.Sprite):
     def __init__(self, image, x, y, width, height, actualY, keyAttached):
         super().__init__()
         self.image = transform.scale(image, (width, height))
-        self.rect = Rect(x,y,width, height)
+        self.rect = Rect(x, y, width, height)
         self.mask = mask.from_surface(self.image)
         self.actualY = actualY
         self.keyAttached = keyAttached
         notes.add(self)
 
     def update(self):
-
-        ###########################################################
-        # Проблема: якщо дві ноти в одній лінії поруч, то         #
-        # при натисканні клавіши обидві зарахуються.              #
-        # повинна зараховуватись тыльки найближча нота до клавіши #
-        ###########################################################
-
-        if self.rect.centery - self.keyAttached.rect.centery > -300 and self.alive:
-            if (self.rect.centery - self.keyAttached.rect.centery < -200 and self.keyAttached.activeFor == 1) or self.rect.centery - self.keyAttached.rect.centery > 200:
-                score[0] -= score[2]
-                ratings.append(0)
-                score_txt.set_text(f"Score: {mathh.trunc(score[0])}")
-                self.kill()
-                # Pop up "Miss." sprite
-            elif (self.rect.centery - self.keyAttached.rect.centery < -150 or self.rect.centery - self.keyAttached.rect.centery > 150) and self.keyAttached.activeFor == 1:
-                score[0] += score[2] / 3
-                ratings.append(0.3)
-                score_txt.set_text(f"Score: {mathh.trunc(score[0])}")
-                self.kill()
-                # Pop up "Meh..." sprite
-            elif (self.rect.centery - self.keyAttached.rect.centery < -100 or self.rect.centery - self.keyAttached.rect.centery > 100) and self.keyAttached.activeFor == 1:
-                score[0] += score[2] / 2
-                ratings.append(0.6)
-                score_txt.set_text(f"Score: {mathh.trunc(score[0])}")
-                self.kill()
-                # Pop up "Good!" sprite
-            elif (self.rect.centery - self.keyAttached.rect.centery < -50 or self.rect.centery - self.keyAttached.rect.centery > 50) and self.keyAttached.activeFor == 1:
-                score[0] += score[2] / 1.5
-                ratings.append(0.9)
-                score_txt.set_text(f"Score: {mathh.trunc(score[0])}")
-                self.kill()
-                # Pop up "Great!" sprite
-            elif (self.rect.centery - self.keyAttached.rect.centery > -50 or self.rect.centery - self.keyAttached.rect.centery < 50) and self.keyAttached.activeFor == 1:
-                score[0] += score[2]
-                ratings.append(1)
-                score_txt.set_text(f"Score: {mathh.trunc(score[0])}")
-                self.kill()
-                # Pop up "Perfect!" sprite
-
+        # Оновлення позиції ноти по Y
         self.rect.x = self.keyAttached.rect.x
-        self.rect.y = ((self.actualY * 4000 / BPM * 0.9 / stepsInBeat) + curstep - self.keyAttached.rect.y) * scrollSpeed + songOffset * 100 + globalSongOffset * 100 + scrollSpeed * 800 + self.keyAttached.rect.y # I hate this sm
+        self.rect.y = ((self.actualY * 4000 / BPM * 0.916 / stepsInBeat) + curstep - self.keyAttached.rect.y) * scrollSpeed + songOffset * 100 + globalSongOffset * 100 + scrollSpeed * 800 + self.keyAttached.rect.y
 
 class Key(sprite.Sprite):
     def __init__(self, image, x, y, width, height, keycode):
         super().__init__()
         self.image = transform.scale(image, (width, height))
-        self.rect = Rect(x,y,width, height)
+        self.rect = Rect(x, y, width, height)
         self.mask = mask.from_surface(self.image)
         self.activeFor = 0
         self.size = (width, height)
@@ -125,14 +87,77 @@ class Key(sprite.Sprite):
         keys.add(self)
 
     def update(self):
-        keys = key.get_pressed()
+        keys_pressed = key.get_pressed()
+        global rpp_timer
+        global rating_popup
 
-        if keys[key.key_code(self.keycode)]:
+        # Знаходимо найближчу ноту що прив’язана до цієї клавіші
+        closest_note = None
+        closest_distance = 10000
+        for note in notes:
+            if note.keyAttached == self:
+                distance = abs(note.rect.centery - self.rect.centery)
+                if distance < closest_distance:
+                    closest_distance = distance
+                    closest_note = note
+                    offset = closest_note.rect.centery - self.rect.centery
+
+        if keys_pressed[key.key_code(self.keycode)]:
             self.image = transform.scale(key_active_img, self.size)
             self.activeFor += 1
+
+            # Якщо така нота знайдена і вона достатньо близько — обробляємо її
+            if closest_note and closest_distance <= 250 and self.activeFor == 1:
+                if offset < -150 or offset > 150:
+                    score[0] -= score[2] / 2
+                    ratings.append(0)
+
+                    rpp_timer = 0
+                    rating_popup.image = miss_img
+                    rating_popup.rect.x = WIDTH /2 - 131
+                elif abs(offset) > 100:
+                    score[0] += score[2] / 3
+                    ratings.append(0.3)
+
+                    rpp_timer = 0
+                    rating_popup.image = meh_img
+                    rating_popup.rect.x = WIDTH /2 - 152
+                elif abs(offset) > 50:
+                    score[0] += score[2] / 2
+                    ratings.append(0.6)
+
+                    rpp_timer = 0
+                    rating_popup.image = good_img
+                    rating_popup.rect.x = WIDTH /2 - 149
+                elif abs(offset) > 35:
+                    score[0] += score[2] / 1.5
+                    ratings.append(0.9)
+
+                    rpp_timer = 0
+                    rating_popup.image = great_img
+                    rating_popup.rect.x = WIDTH /2 - 160
+                else:
+                    score[0] += score[2]
+                    ratings.append(1)
+                    
+                    rpp_timer = 0
+                    rating_popup.image = perfect_img
+                    rating_popup.rect.x = WIDTH /2 - 256
+                score_txt.set_text(f"Score: {mathh.trunc(score[0])}")
+                closest_note.kill()
         else:
             self.image = transform.scale(key_inactive_img, self.size)
             self.activeFor = 0
+            if closest_note and offset > 250:
+                score[0] -= score[2] / 2
+                ratings.append(0)
+
+                rpp_timer = 0
+                rating_popup.image = miss_img
+                rating_popup.rect.x = WIDTH /2 - 131
+                
+                score_txt.set_text(f"Score: {mathh.trunc(score[0])}")
+                closest_note.kill()
 
 def loadChart(chartName):
     chartSteps = open(f"Maps\{chartName}\chart.txt")
@@ -151,7 +176,6 @@ def loadChart(chartName):
 
     global startAfter
     global chartLoaded
-    global countNoteOrder
 
     song_name = chartInfo[0].split(":")[1].replace("\n", "")
     song_author = chartInfo[1].split(":")[1].replace("\n", "")
@@ -177,7 +201,7 @@ def loadChart(chartName):
             for key in newStep:
                 if key == "O":
                     score[1] += 1
-                    score[2] = 1000000 / mathh.floor(score[1])
+                    score[2] = 1000000 / mathh.ceil(score[1])
                     match i:
                         case 0: notes.add(Note(note_img, k1.rect.x, -500, 128, 128, localActualY, k1))
                         case 1: notes.add(Note(note_img, k2.rect.x, -500, 128, 128, localActualY, k2))
@@ -240,6 +264,11 @@ while run:
         curstep += 1
 
         timer += 1
+        rpp_timer += 1
+
+        if rpp_timer > 60:
+            rating_popup.image = noimg
+
         if timer > startAfter and playSong:
             currentSong.set_volume(0.2)
             currentSong.play(loops=0)
