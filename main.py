@@ -71,40 +71,35 @@ class Note(sprite.Sprite):
         notes.add(self)
 
     def update(self):
-        if self.rect.centery - self.keyAttached.rect.centery > -300 and self.alive and abs(self.actualY) < countNoteOrder[0]:
+        if self.rect.centery - self.keyAttached.rect.centery > -300 and self.alive:
             if (self.rect.centery - self.keyAttached.rect.centery < -200 and self.keyAttached.activeFor == 1) or self.rect.centery - self.keyAttached.rect.centery > 200:
                 score[0] -= score[2]
                 ratings.append(0)
                 score_txt.set_text(f"Score: {mathh.trunc(score[0])}")
-                countNoteOrder.pop(0)
                 self.kill()
                 # Pop up "Miss." sprite
             elif (self.rect.centery - self.keyAttached.rect.centery < -150 or self.rect.centery - self.keyAttached.rect.centery > 150) and self.keyAttached.activeFor == 1:
                 score[0] += score[2] / 3
                 ratings.append(0.3)
                 score_txt.set_text(f"Score: {mathh.trunc(score[0])}")
-                countNoteOrder.pop(0)
                 self.kill()
                 # Pop up "Meh..." sprite
             elif (self.rect.centery - self.keyAttached.rect.centery < -100 or self.rect.centery - self.keyAttached.rect.centery > 100) and self.keyAttached.activeFor == 1:
                 score[0] += score[2] / 2
                 ratings.append(0.6)
                 score_txt.set_text(f"Score: {mathh.trunc(score[0])}")
-                countNoteOrder.pop(0)
                 self.kill()
                 # Pop up "Good!" sprite
             elif (self.rect.centery - self.keyAttached.rect.centery < -50 or self.rect.centery - self.keyAttached.rect.centery > 50) and self.keyAttached.activeFor == 1:
                 score[0] += score[2] / 1.5
                 ratings.append(0.9)
                 score_txt.set_text(f"Score: {mathh.trunc(score[0])}")
-                countNoteOrder.pop(0)
                 self.kill()
                 # Pop up "Great!" sprite
             elif (self.rect.centery - self.keyAttached.rect.centery > -50 or self.rect.centery - self.keyAttached.rect.centery < 50) and self.keyAttached.activeFor == 1:
                 score[0] += score[2]
                 ratings.append(1)
                 score_txt.set_text(f"Score: {mathh.trunc(score[0])}")
-                countNoteOrder.pop(0)
                 self.kill()
                 # Pop up "Perfect!" sprite
 
@@ -174,7 +169,6 @@ def loadChart(chartName):
             i = 0
             for key in newStep:
                 if key == "O":
-                    countNoteOrder.append(localActualY -5)
                     score[1] += 1
                     score[2] = 1000000 / mathh.floor(score[1])
                     match i:
@@ -190,7 +184,6 @@ ghost_tapping = bool(open("settings.txt").readlines()[2].split(":")[1].replace("
 globalSongOffset = float(open("settings.txt").readlines()[3].split(":")[1].replace(" ", "").replace("\n", ""))
 controls = str(open("settings.txt").readlines()[4].split(":")[1].replace(" ", "").replace("\n", ""))
 
-countNoteOrder = []
 score = [0, 0, 0] # current score, note count, how many points do you get for getting a "Perfect!"
 ratings = [] # 1 = "Perfect!", 0.9 = "Great!", 0.6 = "Good!", 0.3 = "Meh...", 0 = "Miss."
 accuracy = 100.00
