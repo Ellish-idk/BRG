@@ -71,15 +71,45 @@ class Note(sprite.Sprite):
         notes.add(self)
 
     def update(self):
-        if self.rect.y > self.keyAttached.rect.y +90 +(scrollSpeed/5 + BPM/64)*scrollSpeed*2 and self.alive:
-            score[0] -= score[2]
-            ratings.append(0)
-            score_txt.set_text(f"Score: {mathh.trunc(score[0])}")
-            self.kill()
-            # Pop up "Missed!" sprite
+        if self.rect.centery - self.keyAttached.rect.centery > -300 and self.alive and abs(self.actualY) < countNoteOrder[0]:
+            if (self.rect.centery - self.keyAttached.rect.centery < -200 and self.keyAttached.activeFor == 1) or self.rect.centery - self.keyAttached.rect.centery > 200:
+                score[0] -= score[2]
+                ratings.append(0)
+                score_txt.set_text(f"Score: {mathh.trunc(score[0])}")
+                countNoteOrder.pop(0)
+                self.kill()
+                # Pop up "Miss." sprite
+            elif (self.rect.centery - self.keyAttached.rect.centery < -150 or self.rect.centery - self.keyAttached.rect.centery > 150) and self.keyAttached.activeFor == 1:
+                score[0] += score[2] / 3
+                ratings.append(0.3)
+                score_txt.set_text(f"Score: {mathh.trunc(score[0])}")
+                countNoteOrder.pop(0)
+                self.kill()
+                # Pop up "Meh..." sprite
+            elif (self.rect.centery - self.keyAttached.rect.centery < -100 or self.rect.centery - self.keyAttached.rect.centery > 100) and self.keyAttached.activeFor == 1:
+                score[0] += score[2] / 2
+                ratings.append(0.6)
+                score_txt.set_text(f"Score: {mathh.trunc(score[0])}")
+                countNoteOrder.pop(0)
+                self.kill()
+                # Pop up "Good!" sprite
+            elif (self.rect.centery - self.keyAttached.rect.centery < -50 or self.rect.centery - self.keyAttached.rect.centery > 50) and self.keyAttached.activeFor == 1:
+                score[0] += score[2] / 1.5
+                ratings.append(0.9)
+                score_txt.set_text(f"Score: {mathh.trunc(score[0])}")
+                countNoteOrder.pop(0)
+                self.kill()
+                # Pop up "Great!" sprite
+            elif (self.rect.centery - self.keyAttached.rect.centery > -50 or self.rect.centery - self.keyAttached.rect.centery < 50) and self.keyAttached.activeFor == 1:
+                score[0] += score[2]
+                ratings.append(1)
+                score_txt.set_text(f"Score: {mathh.trunc(score[0])}")
+                countNoteOrder.pop(0)
+                self.kill()
+                # Pop up "Perfect!" sprite
 
         self.rect.x = self.keyAttached.rect.x
-        self.rect.y = ((self.actualY * 4000 / BPM * 0.912 / stepsInBeat) + curstep - self.keyAttached.rect.y) * scrollSpeed + songOffset * 100 + globalSongOffset * 100 + scrollSpeed * 800 + self.keyAttached.rect.y # I hate this sm
+        self.rect.y = ((self.actualY * 4000 / BPM * 0.9 / stepsInBeat) + curstep - self.keyAttached.rect.y) * scrollSpeed + songOffset * 100 + globalSongOffset * 100 + scrollSpeed * 800 + self.keyAttached.rect.y # I hate this sm
 
 class Key(sprite.Sprite):
     def __init__(self, image, x, y, width, height, keycode):
@@ -118,7 +148,8 @@ def loadChart(chartName):
     global validChart
 
     global startAfter
-    global chartLoaded 
+    global chartLoaded
+    global countNoteOrder
 
     song_name = chartInfo[0].split(":")[1].replace("\n", "")
     song_author = chartInfo[1].split(":")[1].replace("\n", "")
@@ -143,6 +174,7 @@ def loadChart(chartName):
             i = 0
             for key in newStep:
                 if key == "O":
+                    countNoteOrder.append(localActualY -5)
                     score[1] += 1
                     score[2] = 1000000 / mathh.floor(score[1])
                     match i:
@@ -158,6 +190,7 @@ ghost_tapping = bool(open("settings.txt").readlines()[2].split(":")[1].replace("
 globalSongOffset = float(open("settings.txt").readlines()[3].split(":")[1].replace(" ", "").replace("\n", ""))
 controls = str(open("settings.txt").readlines()[4].split(":")[1].replace(" ", "").replace("\n", ""))
 
+countNoteOrder = []
 score = [0, 0, 0] # current score, note count, how many points do you get for getting a "Perfect!"
 ratings = [] # 1 = "Perfect!", 0.9 = "Great!", 0.6 = "Good!", 0.3 = "Meh...", 0 = "Miss."
 accuracy = 100.00
