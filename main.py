@@ -21,6 +21,8 @@ window = display.set_mode((WIDTH,HEIGHT), flags=FULLSCREEN)
 display.set_caption("Boring Rhythm Game (BRG)")
 clock = time.Clock()
 
+hitsound = mixer.Sound("Sounds/hitsound.ogg")
+
 noimg = image.load("Sprite/void.png")
 
 note_img = image.load("Sprite/square.png")
@@ -73,7 +75,7 @@ class Note(sprite.Sprite):
     def update(self):
         # Оновлення позиції ноти по Y
         self.rect.x = self.keyAttached.rect.x
-        self.rect.y = ((self.actualY * 4000 / BPM * 0.916 / stepsInBeat) + curstep - self.keyAttached.rect.y) * scrollSpeed + songOffset * 100 + globalSongOffset * 100 + scrollSpeed * 800 + self.keyAttached.rect.y
+        self.rect.y = ((self.actualY * 4000 / BPM * 0.91 / stepsInBeat) + curstep - self.keyAttached.rect.y) * scrollSpeed + songOffset * 100 + globalSongOffset * 100 + scrollSpeed * 800 + self.keyAttached.rect.y
 
 class Key(sprite.Sprite):
     def __init__(self, image, x, y, width, height, keycode):
@@ -143,6 +145,8 @@ class Key(sprite.Sprite):
                     rpp_timer = 0
                     rating_popup.image = perfect_img
                     rating_popup.rect.x = WIDTH /2 - 256
+                hitsound.set_volume(0.2)
+                hitsound.play(loops=0)
                 score_txt.set_text(f"Score: {mathh.trunc(score[0])}")
                 closest_note.kill()
         else:
@@ -246,7 +250,7 @@ k3 = Key(key_inactive_img, WIDTH /2 +70 -64, HEIGHT - 200, 128, 128, controls[2]
 k4 = Key(key_inactive_img, WIDTH /2 +210 -64, HEIGHT - 200, 128, 128, controls[3])
 
 run = True
-loadChart("fridaytheme")
+loadChart("fridaytheme-ex")
 
 if not validChart:
     invalidChart_txt = Label("Invalid chart: make sure scroll speed, steps in beat, BPM and start song after are above 0.", 20, HEIGHT - 40, 20)
@@ -266,7 +270,7 @@ while run:
         timer += 1
         rpp_timer += 1
 
-        if rpp_timer > 60:
+        if rpp_timer > 30:
             rating_popup.image = noimg
 
         if timer > startAfter and playSong:
