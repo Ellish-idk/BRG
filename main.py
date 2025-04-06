@@ -71,6 +71,13 @@ class Note(sprite.Sprite):
         notes.add(self)
 
     def update(self):
+
+        ###########################################################
+        # Проблема: якщо дві ноти в одній лінії поруч, то         #
+        # при натисканні клавіши обидві зарахуються.              #
+        # повинна зараховуватись тыльки найближча нота до клавіши #
+        ###########################################################
+
         if self.rect.centery - self.keyAttached.rect.centery > -300 and self.alive:
             if (self.rect.centery - self.keyAttached.rect.centery < -200 and self.keyAttached.activeFor == 1) or self.rect.centery - self.keyAttached.rect.centery > 200:
                 score[0] -= score[2]
