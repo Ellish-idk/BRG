@@ -103,3 +103,11 @@ xOxx
 Oxxx
 xxxO
 xOOx
+xxxO
+Oxxx
+xxOx
+OOxx
+xxxx
+xxOO
+xxxx
+OOxx

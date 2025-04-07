@@ -250,7 +250,7 @@ k3 = Key(key_inactive_img, WIDTH /2 +70 -64, HEIGHT - 200, 128, 128, controls[2]
 k4 = Key(key_inactive_img, WIDTH /2 +210 -64, HEIGHT - 200, 128, 128, controls[3])
 
 run = True
-loadChart("fridaytheme-ex")
+loadChart("fridaytheme")
 
 if not validChart:
     invalidChart_txt = Label("Invalid chart: make sure scroll speed, steps in beat, BPM and start song after are above 0.", 20, HEIGHT - 40, 20)
