@@ -75,7 +75,7 @@ class Note(sprite.Sprite):
     def update(self):
         # Оновлення позиції ноти по Y
         self.rect.x = self.keyAttached.rect.x
-        self.rect.y = ((self.actualY * 4000 / BPM * 0.91 / stepsInBeat) + curstep - self.keyAttached.rect.y) * scrollSpeed + songOffset * 100 + globalSongOffset * 100 + scrollSpeed * 800 + self.keyAttached.rect.y
+        self.rect.y = ((self.actualY * 4000 / BPM * 0.911 / stepsInBeat) + curstep - self.keyAttached.rect.y) * scrollSpeed + songOffset * 100 + globalSongOffset * 100 + scrollSpeed * 800 + self.keyAttached.rect.y
 
 class Key(sprite.Sprite):
     def __init__(self, image, x, y, width, height, keycode):
@@ -109,29 +109,30 @@ class Key(sprite.Sprite):
             self.activeFor += 1
 
             # Якщо така нота знайдена і вона достатньо близько — обробляємо її
-            if closest_note and closest_distance <= 250 and self.activeFor == 1:
-                if offset < -150 or offset > 150:
+            if closest_note and closest_distance <= 25.0 * scrollSpeed and self.activeFor == 1:
+                if offset < -15.0 * scrollSpeed or offset > 15.0 * scrollSpeed:
                     score[0] -= score[2] / 2
                     ratings.append(0)
 
                     rpp_timer = 0
                     rating_popup.image = miss_img
                     rating_popup.rect.x = WIDTH /2 - 131
-                elif abs(offset) > 100:
+                    misses_txt.set_text(f"Misses: {ratings.count(0)}")
+                elif abs(offset) > 10.0 * scrollSpeed:
                     score[0] += score[2] / 3
                     ratings.append(0.3)
 
                     rpp_timer = 0
                     rating_popup.image = meh_img
                     rating_popup.rect.x = WIDTH /2 - 152
-                elif abs(offset) > 50:
+                elif abs(offset) > 5.0 * scrollSpeed:
                     score[0] += score[2] / 2
                     ratings.append(0.6)
 
                     rpp_timer = 0
                     rating_popup.image = good_img
                     rating_popup.rect.x = WIDTH /2 - 149
-                elif abs(offset) > 35:
+                elif abs(offset) > 3.5 * scrollSpeed:
                     score[0] += score[2] / 1.5
                     ratings.append(0.9)
 
@@ -161,6 +162,7 @@ class Key(sprite.Sprite):
                 rating_popup.rect.x = WIDTH /2 - 131
                 
                 score_txt.set_text(f"Score: {mathh.trunc(score[0])}")
+                misses_txt.set_text(f"Misses: {ratings.count(0)}")
                 closest_note.kill()
 
 def loadChart(chartName):
@@ -250,7 +252,7 @@ k3 = Key(key_inactive_img, WIDTH /2 +70 -64, HEIGHT - 200, 128, 128, controls[2]
 k4 = Key(key_inactive_img, WIDTH /2 +210 -64, HEIGHT - 200, 128, 128, controls[3])
 
 run = True
-loadChart("fridaytheme")
+loadChart("fridaytheme-ex")
 
 if not validChart:
     invalidChart_txt = Label("Invalid chart: make sure scroll speed, steps in beat, BPM and start song after are above 0.", 20, HEIGHT - 40, 20)
@@ -260,7 +262,8 @@ if not validChart:
     k4.kill()
 else:
     score_txt = Label(f"Score: 0", 20, 20, 50)
-    accuracy_txt = Label(f"Accuracy: N/A", 20, 70, 50)
+    accuracy_txt = Label(f"Accuracy: 100.00%", 20, 70, 50)
+    misses_txt = Label(f"Misses: 0", 20, 120, 50)
 
 while run:
     window.fill((0, 0, 0))
@@ -283,7 +286,7 @@ while run:
                 accuracy = mathh.trunc(((1 * ratings.count(1) + 0.9 * ratings.count(0.9) + 0.6 *  ratings.count(0.6) + 0.3 * ratings.count(0.3) + 0 * ratings.count(0)) / len(ratings)) * 10000) / 100
             accuracy_txt.set_text(f"Accuracy: {accuracy}%")
         else:
-            accuracy_txt.set_text(f"Accuracy: N/A")
+            accuracy_txt.set_text(f"Accuracy: 100.00%")
 
 
         notes.update() 
