@@ -5,4 +5,4 @@ BPM:94
 song offset:0
 steps in beat:2
 scroll speed:10
-start song after:94
+start song after:76

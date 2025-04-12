@@ -7,9 +7,6 @@ init()
 font.init()
 mixer.init()
 
-# CHANGE_sound = mixer.Sound('CHANGETHIS.wav')
-# CHANGE_sound.set_volume(0.5)
-
 FONT = 'Fonts/Ubuntu-Bold.ttf'
 
 FPS = 60
@@ -35,6 +32,15 @@ good_img = image.load("Sprite/Ratings/good.png")
 meh_img = image.load("Sprite/Ratings/meh.png")
 miss_img = image.load("Sprite/Ratings/miss.png")
 
+rank_SP_img = image.load("Sprite/Ranks/SP.png")
+rank_S_img = image.load("Sprite/Ranks/S.png")
+rank_A_img = image.load("Sprite/Ranks/A.png")
+rank_B_img = image.load("Sprite/Ranks/B.png")
+rank_C_img = image.load("Sprite/Ranks/C.png")
+rank_D_img = image.load("Sprite/Ranks/D.png")
+rank_F_img = image.load("Sprite/Ranks/F.png")
+rank_0_img = image.load("Sprite/Ranks/0.png")
+
 notes = sprite.Group()
 keys = sprite.Group()
 all_sprites = sprite.Group()
@@ -48,9 +54,9 @@ class Label(sprite.Sprite):
         self.image = self.font.render(text, True, color)
         self.rect = self.image.get_rect()
         self.rect.x = x
-        self.rect.y  = y
+        self.rect.y = y
         all_labels.add(self)
-    
+
     def set_text(self, new_text, color=(255, 255, 255)):
         self.image = self.font.render(new_text, True, color) 
 
@@ -74,8 +80,10 @@ class Note(sprite.Sprite):
 
     def update(self):
         # Оновлення позиції ноти по Y
+
         self.rect.x = self.keyAttached.rect.x
-        self.rect.y = ((self.actualY * 4000 / BPM * 0.911 / stepsInBeat) + curstep - self.keyAttached.rect.y) * scrollSpeed + songOffset * 100 + globalSongOffset * 100 + scrollSpeed * 800 + self.keyAttached.rect.y
+        self.rect.y = (((self.actualY * 4000 / BPM * 0.8834 / stepsInBeat) + curstep) * scrollSpeed + (songOffset + globalSongOffset) * 100 + scrollSpeed * 800) + self.keyAttached.rect.centery - (869 * scrollSpeed) # Мене бісить ця строчка
+        # BPM * 0.911
 
 class Key(sprite.Sprite):
     def __init__(self, image, x, y, width, height, keycode):
@@ -109,8 +117,8 @@ class Key(sprite.Sprite):
             self.activeFor += 1
 
             # Якщо така нота знайдена і вона достатньо близько — обробляємо її
-            if closest_note and closest_distance <= 25.0 * scrollSpeed and self.activeFor == 1:
-                if offset < -15.0 * scrollSpeed or offset > 15.0 * scrollSpeed:
+            if closest_note and closest_distance <= 15.0 * scrollSpeed and self.activeFor == 1:
+                if offset < -10 * scrollSpeed or offset > 10 * scrollSpeed:
                     score[0] -= score[2] / 2
                     ratings.append(0)
 
@@ -118,21 +126,21 @@ class Key(sprite.Sprite):
                     rating_popup.image = miss_img
                     rating_popup.rect.x = WIDTH /2 - 131
                     misses_txt.set_text(f"Misses: {ratings.count(0)}")
-                elif abs(offset) > 10.0 * scrollSpeed:
+                elif abs(offset) > 5 * scrollSpeed:
                     score[0] += score[2] / 3
                     ratings.append(0.3)
 
                     rpp_timer = 0
                     rating_popup.image = meh_img
                     rating_popup.rect.x = WIDTH /2 - 152
-                elif abs(offset) > 5.0 * scrollSpeed:
+                elif abs(offset) > 3.5 * scrollSpeed:
                     score[0] += score[2] / 2
                     ratings.append(0.6)
 
                     rpp_timer = 0
                     rating_popup.image = good_img
                     rating_popup.rect.x = WIDTH /2 - 149
-                elif abs(offset) > 3.5 * scrollSpeed:
+                elif abs(offset) > 2 * scrollSpeed:
                     score[0] += score[2] / 1.5
                     ratings.append(0.9)
 
@@ -146,14 +154,14 @@ class Key(sprite.Sprite):
                     rpp_timer = 0
                     rating_popup.image = perfect_img
                     rating_popup.rect.x = WIDTH /2 - 256
-                hitsound.set_volume(0.2)
+                hitsound.set_volume(hitsoundVolume)
                 hitsound.play(loops=0)
                 score_txt.set_text(f"Score: {mathh.trunc(score[0])}")
                 closest_note.kill()
         else:
             self.image = transform.scale(key_inactive_img, self.size)
             self.activeFor = 0
-            if closest_note and offset > 250:
+            if closest_note and offset > 9.0 * scrollSpeed:
                 score[0] -= score[2] / 2
                 ratings.append(0)
 
@@ -170,6 +178,7 @@ def loadChart(chartName):
     chartInfo = open(f"Maps\{chartName}\chart_info.txt").readlines()
 
     global currentSong
+    global currentSongName
     global song_name
     global song_author
     global song_charter
@@ -194,6 +203,7 @@ def loadChart(chartName):
     startAfter = int(chartInfo[7].split(":")[1].replace("\n", ""))
 
     currentSong = mixer.Sound(f"Maps/{chartName}/Song.ogg")
+    currentSongName = chartName
     chartLoaded = True
     localActualY = 0
 
@@ -214,18 +224,20 @@ def loadChart(chartName):
                         case 2: notes.add(Note(note_img, k3.rect.x, -500, 128, 128, localActualY, k3))
                         case 3: notes.add(Note(note_img, k4.rect.x, -500, 128, 128, localActualY, k4))
                 i += 1
-
 rating_popup = BaseSprite(noimg, WIDTH /2 - 256, HEIGHT - 350, 512, 128)
+rank_sprite = BaseSprite(noimg, 200, 200, 1, 1)
 
-ghost_tapping = bool(open("settings.txt").readlines()[2].split(":")[1].replace(" ", "").replace("\n", ""))
-globalSongOffset = float(open("settings.txt").readlines()[3].split(":")[1].replace(" ", "").replace("\n", ""))
-controls = str(open("settings.txt").readlines()[4].split(":")[1].replace(" ", "").replace("\n", ""))
+globalSongOffset = float(open("settings.txt").readlines()[2].split(":")[1].replace(" ", "").replace("\n", ""))
+controls = str(open("settings.txt").readlines()[3].split(":")[1].replace(" ", "").replace("\n", ""))
+musicVolume = int(open("settings.txt").readlines()[4].split(":")[1].replace(" ", "").replace("\n", "")) / 100
+hitsoundVolume = int(open("settings.txt").readlines()[5].split(":")[1].replace(" ", "").replace("\n", "")) / 100
 
 score = [0, 0, 0] # current score, note count, how many points do you get for getting a "Perfect!"
 ratings = [] # 1 = "Perfect!", 0.9 = "Great!", 0.6 = "Good!", 0.3 = "Meh...", 0 = "Miss."
 accuracy = 100.00
 
 currentSong = None
+currentSongName = None
 chartLoaded = False
 
 song_name = None
@@ -243,8 +255,10 @@ startAfter = None
 playSong = True
 validChart = None
 
+dt = 0
 timer = 0
 rpp_timer = 0
+fadeOutVol = 1
 
 k1 = Key(key_inactive_img, WIDTH /2 -210 -64, HEIGHT - 200, 128, 128, controls[0])
 k2 = Key(key_inactive_img, WIDTH /2 -70 -64, HEIGHT - 200, 128, 128, controls[1])
@@ -267,33 +281,78 @@ else:
 
 while run:
     window.fill((0, 0, 0))
-    if validChart:
-        curstep += 1
 
-        timer += 1
-        rpp_timer += 1
+    if mathh.trunc(curstep * (60 / BPM)/(48.8/stepsInBeat/2)) <= len(open(f"Maps\{currentSongName}\chart.txt").readlines()) + 3 * stepsInBeat:
+        rank_sprite.image = noimg
+        if validChart:
+            score_txt.rect.topleft = (20, 20)
+            accuracy_txt.rect.topleft = (20, 70)
+            misses_txt.rect.topleft = (20, 120)
 
-        if rpp_timer > 30:
-            rating_popup.image = noimg
+            curstep += dt/0.017
 
-        if timer > startAfter and playSong:
-            currentSong.set_volume(0.2)
-            currentSong.play(loops=0)
-            playSong = False
-        
-        if len(ratings) > 0:
-            for i in ratings:
-                accuracy = mathh.trunc(((1 * ratings.count(1) + 0.9 * ratings.count(0.9) + 0.6 *  ratings.count(0.6) + 0.3 * ratings.count(0.3) + 0 * ratings.count(0)) / len(ratings)) * 10000) / 100
-            accuracy_txt.set_text(f"Accuracy: {accuracy}%")
+            timer += dt/0.017
+            rpp_timer += dt/0.017
+
+            if rpp_timer > 30:
+                rating_popup.image = noimg
+
+            if timer > startAfter and playSong:
+                currentSong.set_volume(musicVolume)
+                currentSong.play(loops=0)
+                playSong = False
+            
+            if len(ratings) > 0:
+                for i in ratings:
+                    accuracy = mathh.trunc(((1 * ratings.count(1) + 0.9 * ratings.count(0.9) + 0.6 *  ratings.count(0.6) + 0.3 * ratings.count(0.3) + 0 * ratings.count(0)) / len(ratings)) * 10000) / 100
+                accuracy_txt.set_text(f"Accuracy: {accuracy}%")
+                # accuracy_txt.set_text(f"Current frame: {curstep}") #
+            else:
+                accuracy_txt.set_text(f"Accuracy: 100.00%")
+
+            # модчарт
+            if currentSongName == "fridaytheme-ex":
+                if curstep < 2528:
+                    k1.rect.y = HEIGHT - 200 + (mathh.sin(curstep/80 +0) * 25)
+                    k2.rect.y = HEIGHT - 200 + (mathh.sin(curstep/80 +1) * 25)
+                    k3.rect.y = HEIGHT - 200 + (mathh.sin(curstep/80 +2) * 25)
+                    k4.rect.y = HEIGHT - 200 + (mathh.sin(curstep/80 +3) * 25)
+                else:
+                    k1.rect.y = HEIGHT - 200 + (mathh.sin(curstep/7 +0) * 15)
+                    k2.rect.y = HEIGHT - 200 + (mathh.sin(curstep/7 +1) * 15)
+                    k3.rect.y = HEIGHT - 200 + (mathh.sin(curstep/7 +2) * 15)
+                    k4.rect.y = HEIGHT - 200 + (mathh.sin(curstep/7 +3) * 15)
+
+                    k1.rect.centerx = WIDTH /2 -210 + (mathh.cos(curstep/10 +0) * 25)
+                    k2.rect.centerx = WIDTH /2 -70 + (mathh.cos(curstep/10 +1) * 25)
+                    k3.rect.centerx = WIDTH /2 +70 + (mathh.cos(curstep/10 +2) * 25)
+                    k4.rect.centerx = WIDTH /2 +210 + (mathh.cos(curstep/10 +3) * 25)
+
+            notes.update() 
+            keys.update()
+
+            keys.draw(window)
+            notes.draw(window)
+    else:
+        rating_popup.image = noimg
+        if accuracy == 100: rank_sprite.image = rank_SP_img
+        elif accuracy >= 95: rank_sprite.image = rank_S_img
+        elif accuracy >= 90: rank_sprite.image = rank_A_img
+        elif accuracy >= 85: rank_sprite.image = rank_B_img
+        elif accuracy >= 75: rank_sprite.image = rank_C_img
+        elif accuracy >= 65: rank_sprite.image = rank_D_img
+        elif accuracy >= 1: rank_sprite.image = rank_F_img
+        else: rank_sprite.image = rank_0_img
+
+        score_txt.rect.topleft = (200, 480)
+        accuracy_txt.rect.topleft = (200, 550)
+        misses_txt.rect.topleft = (200, 620)
+
+        if fadeOutVol > 0:
+            fadeOutVol -= 0.005
+            currentSong.set_volume(fadeOutVol * musicVolume)
         else:
-            accuracy_txt.set_text(f"Accuracy: 100.00%")
-
-
-        notes.update() 
-        keys.update()
-
-        keys.draw(window)
-        notes.draw(window)
+            currentSong.stop()
 
     for e in event.get():
         if e.type == QUIT:
@@ -305,4 +364,4 @@ while run:
     all_labels.draw(window)
     
     display.update()
-    clock.tick(FPS)
+    dt = clock.tick(FPS)/1000

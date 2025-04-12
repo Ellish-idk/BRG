@@ -1,5 +1,6 @@
 PLEASE DO NOT CHANGE THE ORDER OR THE AMOUNT OF LINES IN THIS FILE! IT MIGHT BREAK THE GAME
 
-ghost tapping (True / False):True
 global song offset:0
 controls:dfkl
+music volume (%): 20
+hitsound volume (%): 30
